@@ -13,10 +13,13 @@ import (
 )
 
 type ShardSet struct {
-	username        string
-	password        string
-	host            string
-	port            int
+	username string
+	password string
+	host     string
+	port     int
+	// tls has to be a string b/c we need to be able to pass in `skip-verify`
+	// more info: https://github.com/go-sql-driver/mysql#tls
+	tls             string
 	dbNamePrefix    string
 	numShards       int
 	maxShards       int
@@ -42,6 +45,13 @@ func WithLogger(logger *log.Logger) func(*ShardSet) {
 		s.log = logger
 	}
 }
+
+func WithTLS(tls string) func(*ShardSet) {
+	return func(s *ShardSet) {
+		s.tls = tls
+	}
+}
+
 func NewShardSet(username string, password string, host string, port int, dbNamePrefix string, numShards int, maxShards int, maxConns int, options ...func(*ShardSet)) *ShardSet {
 	s := &ShardSet{
 		username:     username,
@@ -102,6 +112,10 @@ func (s *ShardSet) addShard(i int) (err errs.Err) {
 }
 
 func newShard(s *ShardSet, dbName string, autoIncrementOffset int) (*Shard, errs.Err) {
+	tls := s.tls
+	if tls == "" {
+		tls = "false"
+	}
 	connVars := ConnVariables{
 		"autocommit":               "true",
 		"clientFoundRows":          "true",
@@ -110,6 +124,7 @@ func newShard(s *ShardSet, dbName string, autoIncrementOffset int) (*Shard, errs
 		"auto_increment_increment": strconv.Itoa(s.maxShards),
 		"auto_increment_offset":    strconv.Itoa(autoIncrementOffset),
 		"sql_mode":                 "STRICT_ALL_TABLES",
+		"tls":                      tls,
 	}
 
 	db, err := dbOpener(s.username, s.password, dbName, s.host, s.port, connVars)
