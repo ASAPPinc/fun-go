@@ -528,6 +528,12 @@ func scanColumnValue(column string, reflectVal reflect.Value, value *sql.RawByte
 			return errs.Wrap(stdErr, errInfo("strconv.ParseInt error", query, args, errs.Info{"Bytes": bytes}))
 		}
 		reflectVal.SetInt(reflect.ValueOf(intVal).Int())
+	case reflect.Float32, reflect.Float64:
+		floatVal, stdErr := strconv.ParseFloat(string(bytes), 64)
+		if stdErr != nil {
+			return errs.Wrap(stdErr, errInfo("strconv.ParseFloat error", query, args, errs.Info{"Bytes": bytes}))
+		}
+		reflectVal.SetFloat(floatVal)
 	case reflect.Bool:
 		boolVal, stdErr := strconv.ParseBool(string(bytes))
 		if stdErr != nil {
