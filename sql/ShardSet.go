@@ -133,7 +133,7 @@ func newShard(s *ShardSet, dbName string, autoIncrementOffset int) (*Shard, errs
 	}
 
 	db.SetMaxOpenConns(s.maxConns)
-	// db.SetMaxIdleConns(n)
+	db.SetMaxIdleConns(s.maxConns / 2)
 	stdErr := db.Ping()
 	if stdErr != nil {
 		return nil, errs.Wrap(stdErr, nil)
