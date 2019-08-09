@@ -7,6 +7,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/marcuswestin/fun-go/errs"
 	"github.com/marcuswestin/fun-go/random"
@@ -134,6 +135,7 @@ func newShard(s *ShardSet, dbName string, autoIncrementOffset int) (*Shard, errs
 
 	db.SetMaxOpenConns(s.maxConns)
 	db.SetMaxIdleConns(s.maxConns / 2)
+	db.SetConnMaxLifetime(30 * time.Minute)
 	stdErr := db.Ping()
 	if stdErr != nil {
 		return nil, errs.Wrap(stdErr, nil)
